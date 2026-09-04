@@ -1,0 +1,27 @@
+@import "tailwindcss";
+
+/* Custom background grid styling */
+.tech-3d-grid {
+  background-image: 
+    linear-gradient(to right, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.07) 1px, transparent 1px);
+  background-size: 40px 40px;
+  
+  mask-image: radial-gradient(ellipse at 60% 50%, black 20%, transparent 70%);
+  -webkit-mask-image: radial-gradient(ellipse at 60% 50%, black 20%, transparent 70%);
+  
+  /* Standard static values combined with dynamic mouse modifiers */
+  transform: 
+    perspective(1000px) 
+    rotateX(calc(60deg + var(--grid-rx, 0deg))) 
+    rotateZ(calc(-25deg + var(--grid-ry, 0deg))) 
+    scale(1.6) 
+    translateY(-100px);
+    
+  transition: transform 0.2s ease-out;
+}
+
+/* Forces children elements to preserve their actual 3D spatial properties */
+.transform-style-3d {
+  transform-style: preserve-3d;
+}
