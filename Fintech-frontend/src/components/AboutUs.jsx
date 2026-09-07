@@ -29,17 +29,17 @@ function AboutUs() {
 
   return (
     <section id="about" className="relative bg-[#0b0f19] text-white py-20 px-8 md:px-16 border-t border-slate-800/80 overflow-hidden font-sans">
-      
+
       {/* Background Ambient Glows */}
       <div className="absolute top-1/2 left-0 w-96 h-96 bg-[#26e6b6]/5 rounded-full blur-3xl pointer-events-none -translate-y-1/2"></div>
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none"></div>
 
       <div className="max-w-6xl mx-auto space-y-16 relative z-10">
-        
+
         {/* Header Section */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#26e6b6]/10 border border-[#26e6b6]/30 text-[#26e6b6] text-xs font-bold uppercase tracking-wider">
-            <Award className="w-3.5 h-3.5" /> About TrustLedger
+            <Award className="w-3.5 h-3.5" /> About CreditFlow
           </div>
           <h2 className="text-3xl md:text-5xl font-extrabold tracking-tight">
             Revolutionizing Business Credit with <br />

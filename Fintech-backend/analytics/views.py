@@ -5,7 +5,7 @@ from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework_simplejwt.authentication import JWTAuthentication
 from django.contrib.auth.models import User
-from .models import BusinessProfile, LoanApplication
+from .models import BusinessProfile, LoanApplication, Transaction
 from .services import (
     calculate_credit_score, 
     generate_cash_flow_forecast,
@@ -358,119 +358,163 @@ class LoanApplicationView(APIView):
 
 
 class AnalyticsTransactionsView(APIView):
-    """Transactions list and summary endpoint"""
+    """Transactions list and summary endpoint with dynamic credit score calculation"""
     permission_classes = [AllowAny]
 
     def get(self, request):
         profile, user = get_or_create_profile(request)
         
-        # Sample structured transactions derived from company profile cashflow
-        monthly = profile.monthly_cashflow or 24500.0
+        # Fetch existing transactions for this user
+        db_txns = Transaction.objects.filter(user=user).order_by('-created_at')
         
-        sample_transactions = [
-          {
-            "id": "TXN-882101",
-            "date": "2026-08-24",
-            "merchant": "AWS Cloud Services",
-            "category": "Infrastructure",
-            "type": "debit",
-            "amount": 1450.00,
-            "status": "Completed",
-            "payment_method": "Corporate Credit Card (•••• 4092)",
-            "reference": "INV-2026-081"
-          },
-          {
-            "id": "TXN-882102",
-            "date": "2026-08-23",
-            "merchant": "Stripe Merchant Payout",
-            "category": "Client Revenue",
-            "type": "credit",
-            "amount": 12800.00,
-            "status": "Completed",
-            "payment_method": "ACH Direct Deposit",
-            "reference": "SETTLE-88192"
-          },
-          {
-            "id": "TXN-882103",
-            "date": "2026-08-21",
-            "merchant": "Salesforce SaaS Subscription",
-            "category": "Software",
-            "type": "debit",
-            "amount": 850.00,
-            "status": "Completed",
-            "payment_method": "Auto-Debit Checking",
-            "reference": "SUB-99412"
-          },
-          {
-            "id": "TXN-882104",
-            "date": "2026-08-20",
-            "merchant": "Apex Enterprise Invoicing",
-            "category": "Client Revenue",
-            "type": "credit",
-            "amount": 9450.00,
-            "status": "Completed",
-            "payment_method": "Wire Transfer",
-            "reference": "INV-99014"
-          },
-          {
-            "id": "TXN-882105",
-            "date": "2026-08-18",
-            "merchant": "WeWork Office Lease",
-            "category": "Operations",
-            "type": "debit",
-            "amount": 3200.00,
-            "status": "Completed",
-            "payment_method": "ACH Direct Deposit",
-            "reference": "LEASE-AUG26"
-          },
-          {
-            "id": "TXN-882106",
-            "date": "2026-08-15",
-            "merchant": "Google Workspace & Ads",
-            "category": "Marketing",
-            "type": "debit",
-            "amount": 1120.00,
-            "status": "Pending",
-            "payment_method": "Corporate Credit Card (•••• 4092)",
-            "reference": "ADS-77291"
-          },
-          {
-            "id": "TXN-882107",
-            "date": "2026-08-12",
-            "merchant": "Global Logistics Supply",
-            "category": "Inventory",
-            "type": "debit",
-            "amount": 4500.00,
-            "status": "Completed",
-            "payment_method": "Wire Transfer",
-            "reference": "PO-10492"
-          },
-          {
-            "id": "TXN-882108",
-            "date": "2026-08-10",
-            "merchant": "KPMG Tax Compliance Retainer",
-            "category": "Professional Services",
-            "type": "debit",
-            "amount": 2100.00,
-            "status": "Flagged",
-            "payment_method": "ACH Direct Deposit",
-            "reference": "RET-2026-Q3"
-          }
-        ]
+        if not db_txns.exists():
+            # Seed initial sample transactions for the user
+            sample_txns = [
+              { "txn_id": "TXN-882101", "date": "2026-08-24", "merchant": "AWS Cloud Services", "category": "Infrastructure", "type": "debit", "amount": 1450.00, "status": "Completed", "payment_method": "Corporate Credit Card (•••• 4092)", "reference": "INV-2026-081" },
+              { "txn_id": "TXN-882102", "date": "2026-08-23", "merchant": "Stripe Merchant Payout", "category": "Client Revenue", "type": "credit", "amount": 12800.00, "status": "Completed", "payment_method": "ACH Direct Deposit", "reference": "SETTLE-88192" },
+              { "txn_id": "TXN-882103", "date": "2026-08-21", "merchant": "Salesforce SaaS Subscription", "category": "Software", "type": "debit", "amount": 850.00, "status": "Completed", "payment_method": "Auto-Debit Checking", "reference": "SUB-99412" },
+              { "txn_id": "TXN-882104", "date": "2026-08-20", "merchant": "Apex Enterprise Invoicing", "category": "Client Revenue", "type": "credit", "amount": 9450.00, "status": "Completed", "payment_method": "Wire Transfer", "reference": "INV-99014" },
+              { "txn_id": "TXN-882105", "date": "2026-08-18", "merchant": "WeWork Office Lease", "category": "Operations", "type": "debit", "amount": 3200.00, "status": "Completed", "payment_method": "ACH Direct Deposit", "reference": "LEASE-AUG26" },
+              { "txn_id": "TXN-882106", "date": "2026-08-15", "merchant": "Google Workspace & Ads", "category": "Marketing", "type": "debit", "amount": 1120.00, "status": "Pending", "payment_method": "Corporate Credit Card (•••• 4092)", "reference": "ADS-77291" },
+              { "txn_id": "TXN-882107", "date": "2026-08-12", "merchant": "Global Logistics Supply", "category": "Inventory", "type": "debit", "amount": 4500.00, "status": "Completed", "payment_method": "Wire Transfer", "reference": "PO-10492" },
+              { "txn_id": "TXN-882108", "date": "2026-08-10", "merchant": "KPMG Tax Compliance Retainer", "category": "Professional Services", "type": "debit", "amount": 2100.00, "status": "Flagged", "payment_method": "ACH Direct Deposit", "reference": "RET-2026-Q3" }
+            ]
+            for t in sample_txns:
+                Transaction.objects.create(
+                    user=user,
+                    txn_id=t['txn_id'],
+                    date=t['date'],
+                    merchant=t['merchant'],
+                    category=t['category'],
+                    type=t['type'],
+                    amount=t['amount'],
+                    status=t['status'],
+                    payment_method=t['payment_method'],
+                    reference=t['reference']
+                )
+            db_txns = Transaction.objects.filter(user=user).order_by('-created_at')
 
-        total_inflow = sum(t['amount'] for t in sample_transactions if t['type'] == 'credit')
-        total_outflow = sum(t['amount'] for t in sample_transactions if t['type'] == 'debit')
-        
+        transactions_list = []
+        total_inflow = 0.0
+        total_outflow = 0.0
+        pending_count = 0
+
+        for t in db_txns:
+            if t.type == 'credit':
+                total_inflow += t.amount
+            else:
+                total_outflow += t.amount
+            if t.status == 'Pending':
+                pending_count += 1
+
+            transactions_list.append({
+                "id": t.txn_id,
+                "date": t.date,
+                "merchant": t.merchant,
+                "category": t.category,
+                "type": t.type,
+                "amount": t.amount,
+                "status": t.status,
+                "payment_method": t.payment_method,
+                "reference": t.reference
+            })
+
+        net_cashflow = total_inflow - total_outflow
+        score_data = calculate_credit_score(profile)
+
         return Response({
             "summary": {
-                "account_balance": profile.annual_revenue * 0.45 or 144000.0,
-                "monthly_inflow": total_inflow or 22250.0,
-                "monthly_outflow": total_outflow or 13420.0,
-                "net_cashflow": total_inflow - total_outflow,
-                "pending_count": sum(1 for t in sample_transactions if t['status'] == 'Pending')
+                "account_balance": round((profile.annual_revenue or 320000.0) * 0.45, 2),
+                "monthly_inflow": round(total_inflow, 2),
+                "monthly_outflow": round(total_outflow, 2),
+                "net_cashflow": round(net_cashflow, 2),
+                "pending_count": pending_count
             },
-            "transactions": sample_transactions
+            "transactions": transactions_list,
+            "score": score_data
         }, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        profile, user = get_or_create_profile(request)
+        data = request.data
+
+        try:
+            amount = float(data.get('amount', 0))
+        except (ValueError, TypeError):
+            amount = 0.0
+
+        txn_type = data.get('type', 'credit')
+        merchant = data.get('merchant', 'New Vendor/Client')
+        category = data.get('category', 'General Business')
+        payment_method = data.get('payment_method', 'ACH Direct Deposit')
+        date_val = data.get('date', '2026-08-25')
+        status_val = data.get('status', 'Completed')
+        
+        import random, time
+        reference = data.get('reference') or f"REF-{random.randint(10000, 99999)}"
+        txn_id = f"TXN-{random.randint(882100, 999999)}"
+
+        new_txn = Transaction.objects.create(
+            user=user,
+            txn_id=txn_id,
+            date=date_val,
+            merchant=merchant,
+            category=category,
+            type=txn_type,
+            amount=amount,
+            status=status_val,
+            payment_method=payment_method,
+            reference=reference
+        )
+
+        # Recalculate financial metrics for profile and credit score
+        db_txns = Transaction.objects.filter(user=user).order_by('-created_at')
+        total_inflow = sum(t.amount for t in db_txns if t.type == 'credit')
+        total_outflow = sum(t.amount for t in db_txns if t.type == 'debit')
+        net_cashflow = total_inflow - total_outflow
+
+        # Dynamic metric updates based on transaction stream
+        if total_inflow > 0:
+            profile.monthly_cashflow = float(total_inflow)
+            profile.annual_revenue = float(total_inflow * 12.0)
+            
+            exp_ratio = (total_outflow / max(1.0, total_inflow)) * 100.0
+            profile.expense_ratio = round(min(95.0, max(5.0, exp_ratio)), 1)
+
+            if net_cashflow > 0:
+                profile.avg_payment_delay_days = max(2, profile.avg_payment_delay_days - 1)
+                profile.revenue_volatility = max(1.2, round(profile.revenue_volatility - 0.2, 1))
+
+        profile.save()
+
+        # Recalculate ML Credit Score dynamically
+        updated_score = calculate_credit_score(profile)
+
+        transactions_list = [{
+            "id": t.txn_id,
+            "date": t.date,
+            "merchant": t.merchant,
+            "category": t.category,
+            "type": t.type,
+            "amount": t.amount,
+            "status": t.status,
+            "payment_method": t.payment_method,
+            "reference": t.reference
+        } for t in db_txns]
+
+        return Response({
+            "message": "Transaction recorded and credit score updated!",
+            "new_transaction_id": new_txn.txn_id,
+            "summary": {
+                "account_balance": round(profile.annual_revenue * 0.45, 2),
+                "monthly_inflow": round(total_inflow, 2),
+                "monthly_outflow": round(total_outflow, 2),
+                "net_cashflow": round(net_cashflow, 2),
+                "pending_count": sum(1 for t in db_txns if t.status == 'Pending')
+            },
+            "transactions": transactions_list,
+            "score": updated_score
+        }, status=status.HTTP_201_CREATED)
 
 
 class AnalyticsSettingsView(APIView):

@@ -17,8 +17,8 @@ function Navbar() {
             <div className="flex items-center justify-between w-full max-w-7xl mx-auto">
                 {/* Logo */}
                 <div onClick={() => navigate('/')} className="flex items-center justify-center cursor-pointer">
-                    <img src={logo} alt="TrustLedger Logo" className="h-10 w-auto" />
-                    <h2 className="ml-2 text-xl font-extrabold text-white tracking-tight">TrustLedger</h2>
+                    <img src={logo} alt="CreditFlow Logo" className="h-10 w-auto" />
+                    <h2 className="ml-2 text-xl font-extrabold text-white tracking-tight">CreditFlow</h2>
                 </div>
 
                 {/* Nav Links */}
@@ -31,11 +31,11 @@ function Navbar() {
 
                 {/* Auth Buttons */}
                 <div className="flex items-center gap-3">
-                    <button 
-                      onClick={() => navigate('/login')} 
-                      className="px-5 py-2.5 hover:bg-[#1fc49a] transition bg-[#26e6b6] text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-[#26e6b6]/20"
+                    <button
+                        onClick={() => navigate('/login')}
+                        className="px-5 py-2.5 hover:bg-[#1fc49a] transition bg-[#26e6b6] text-slate-950 font-bold text-xs rounded-xl shadow-lg shadow-[#26e6b6]/20"
                     >
-                      Sign In / Portal
+                        Sign In / Portal
                     </button>
                 </div>
             </div>

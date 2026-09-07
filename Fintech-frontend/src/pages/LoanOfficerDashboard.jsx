@@ -1,19 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import logo from '../assets/logo.png';
-import { 
-  ShieldCheck, 
-  Search, 
-  Filter, 
-  CheckCircle, 
-  XCircle, 
-  Clock, 
-  AlertCircle, 
-  FileText, 
-  DollarSign, 
-  Building2, 
-  TrendingUp, 
-  LogOut, 
+import {
+  ShieldCheck,
+  Search,
+  Filter,
+  CheckCircle,
+  XCircle,
+  Clock,
+  AlertCircle,
+  FileText,
+  DollarSign,
+  Building2,
+  TrendingUp,
+  LogOut,
   RefreshCw,
   Sliders,
   Sparkles,
@@ -33,7 +33,7 @@ function LoanOfficerDashboard() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
-  
+
   // Selected application modal state
   const [selectedApp, setSelectedApp] = useState(null);
   const [modalStatus, setModalStatus] = useState('');
@@ -146,7 +146,7 @@ function LoanOfficerDashboard() {
         interest_rate: parseFloat(modalInterestRate) || selectedApp.interest_rate
       };
       await axios.patch(`http://localhost:8000/api/analytics/loan/officer/applications/${selectedApp.id}/status/`, payload, { headers });
-      
+
       // Update local state
       setApplications(prev => prev.map(a => a.id === selectedApp.id ? {
         ...a,
@@ -178,12 +178,12 @@ function LoanOfficerDashboard() {
 
   // Filtered Applications
   const filteredApps = applications.filter(app => {
-    const matchesSearch = 
+    const matchesSearch =
       app.applicant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       app.applicant.company_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       app.applicant.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       app.loan_purpose.toLowerCase().includes(searchQuery.toLowerCase());
-    
+
     const matchesStatus = statusFilter === 'ALL' || app.status === statusFilter;
     return matchesSearch && matchesStatus;
   });
@@ -193,20 +193,20 @@ function LoanOfficerDashboard() {
   const pendingCount = applications.filter(a => a.status === 'UNDER_REVIEW').length;
   const approvedCapital = applications.filter(a => a.status === 'APPROVED' || a.status === 'PRE_APPROVED')
     .reduce((sum, a) => sum + (a.approved_amount || a.requested_amount), 0);
-  const avgCreditScore = totalAppsCount > 0 
+  const avgCreditScore = totalAppsCount > 0
     ? Math.round(applications.reduce((sum, a) => sum + (a.applicant.credit_score || 720), 0) / totalAppsCount)
     : 740;
 
   return (
     <div className="min-h-screen bg-[#0b0f19] text-slate-100 font-sans flex flex-col">
-      
+
       {/* Top Navigation Bar */}
       <header className="border-b border-slate-800 bg-[#111726]/80 backdrop-blur-md px-6 py-4 flex items-center justify-between sticky top-0 z-20">
         <div className="flex items-center gap-3">
-          <img src={logo} alt="TrustLedger Logo" className="h-10 w-auto object-contain" />
+          <img src={logo} alt="CreditFlow Logo" className="h-10 w-auto object-contain" />
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-lg font-bold text-white tracking-tight">TrustLedger</span>
+              <span className="text-lg font-bold text-white tracking-tight">CreditFlow</span>
               <span className="px-2 py-0.5 rounded-full bg-[#26e6b6]/15 border border-[#26e6b6]/30 text-[#26e6b6] text-[10px] font-extrabold uppercase">
                 Loan Officer Portal
               </span>
@@ -221,7 +221,7 @@ function LoanOfficerDashboard() {
             <p className="text-[10px] text-[#26e6b6]">Senior Underwriter</p>
           </div>
 
-          <button 
+          <button
             onClick={handleLogout}
             className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-800 border border-slate-700 text-slate-300 hover:text-white hover:bg-slate-700 transition text-xs font-semibold"
           >
@@ -233,7 +233,7 @@ function LoanOfficerDashboard() {
 
       {/* Main Canvas Body */}
       <main className="flex-1 p-6 md:p-10 max-w-7xl mx-auto w-full space-y-8">
-        
+
         {/* Title Header */}
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div>
@@ -241,7 +241,7 @@ function LoanOfficerDashboard() {
             <p className="text-slate-400 text-xs mt-1">Review live borrower applications stored in database, check ML credit scores & approve requests.</p>
           </div>
 
-          <button 
+          <button
             onClick={fetchApplications}
             className="flex items-center gap-2 px-4 py-2.5 bg-[#182032] border border-slate-700 rounded-xl text-xs font-bold text-slate-300 hover:text-white hover:border-[#26e6b6] transition shadow-md"
           >
@@ -252,7 +252,7 @@ function LoanOfficerDashboard() {
 
         {/* 4 Overview Metric Summary Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          
+
           <div className="bg-[#111726] border border-slate-800 rounded-2xl p-5 shadow-xl">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-400">Total Applications</span>
@@ -301,15 +301,15 @@ function LoanOfficerDashboard() {
 
         {/* Filter Controls & Search */}
         <div className="bg-[#111726] border border-slate-800 rounded-2xl p-4 flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
-          
+
           {/* Search Box */}
           <div className="relative w-full md:w-80">
             <Search className="w-4 h-4 absolute left-3.5 top-3 text-slate-500" />
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search business, applicant, email..." 
+              placeholder="Search business, applicant, email..."
               className="w-full bg-[#182032] border border-slate-700 text-white pl-10 pr-4 py-2 rounded-xl text-xs focus:outline-none focus:border-[#26e6b6] transition"
             />
           </div>
@@ -320,11 +320,10 @@ function LoanOfficerDashboard() {
               <button
                 key={st}
                 onClick={() => setStatusFilter(st)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${
-                  statusFilter === st 
-                    ? 'bg-[#26e6b6] text-slate-950 shadow-md' 
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap ${statusFilter === st
+                    ? 'bg-[#26e6b6] text-slate-950 shadow-md'
                     : 'bg-[#182032] text-slate-400 hover:text-white border border-slate-800'
-                }`}
+                  }`}
               >
                 {st === 'ALL' ? 'All Applications' : st.replace('_', ' ')}
               </button>
@@ -361,7 +360,7 @@ function LoanOfficerDashboard() {
                 <tbody className="divide-y divide-slate-800/60 text-slate-200 font-medium">
                   {filteredApps.map((app) => (
                     <tr key={app.id} className="hover:bg-[#182136] transition">
-                      
+
                       {/* Applicant & Company */}
                       <td className="p-4">
                         <div className="font-bold text-white text-sm">{app.applicant.company_name}</div>
@@ -376,13 +375,12 @@ function LoanOfficerDashboard() {
 
                       {/* ML Credit Score */}
                       <td className="p-4">
-                        <span className={`inline-flex items-center gap-1 font-bold text-xs px-2.5 py-1 rounded-lg ${
-                          app.applicant.credit_score >= 740 
+                        <span className={`inline-flex items-center gap-1 font-bold text-xs px-2.5 py-1 rounded-lg ${app.applicant.credit_score >= 740
                             ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                             : app.applicant.credit_score >= 650
-                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                            : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                        }`}>
+                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                              : 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                          }`}>
                           <Sparkles className="w-3.5 h-3.5" />
                           {app.applicant.credit_score} / 850
                         </span>
@@ -402,22 +400,21 @@ function LoanOfficerDashboard() {
 
                       {/* Status */}
                       <td className="p-4">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${
-                          app.status === 'APPROVED' 
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold uppercase ${app.status === 'APPROVED'
                             ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                             : app.status === 'PRE_APPROVED'
-                            ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                            : app.status === 'REJECTED'
-                            ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
-                            : 'bg-slate-700/50 text-slate-300 border border-slate-600'
-                        }`}>
+                              ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                              : app.status === 'REJECTED'
+                                ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
+                                : 'bg-slate-700/50 text-slate-300 border border-slate-600'
+                          }`}>
                           {app.status.replace('_', ' ')}
                         </span>
                       </td>
 
                       {/* Action */}
                       <td className="p-4 text-right">
-                        <button 
+                        <button
                           onClick={() => handleOpenModal(app)}
                           className="px-3.5 py-1.5 rounded-xl bg-[#26e6b6] text-slate-950 font-bold hover:bg-[#1fc49a] transition shadow-md text-xs inline-flex items-center gap-1"
                         >
@@ -439,7 +436,7 @@ function LoanOfficerDashboard() {
       {selectedApp && (
         <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-[#111726] border border-slate-700 rounded-3xl w-full max-w-2xl overflow-hidden shadow-2xl animate-in fade-in zoom-in-95">
-            
+
             {/* Modal Header */}
             <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-[#161f33]">
               <div>
@@ -447,7 +444,7 @@ function LoanOfficerDashboard() {
                 <p className="text-xs text-slate-400">{selectedApp.applicant.company_name} ({selectedApp.applicant.name})</p>
               </div>
 
-              <button 
+              <button
                 onClick={() => setSelectedApp(null)}
                 className="text-slate-400 hover:text-white p-1 rounded-lg transition"
               >
@@ -457,7 +454,7 @@ function LoanOfficerDashboard() {
 
             {/* Modal Content */}
             <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
-              
+
               {/* Financial Metrics Summary Grid */}
               <div className="grid grid-cols-3 gap-3 bg-[#182032] p-4 rounded-2xl border border-slate-800 text-xs">
                 <div>
@@ -480,7 +477,7 @@ function LoanOfficerDashboard() {
               <div className="grid grid-cols-2 gap-4 text-xs">
                 <div>
                   <label className="block text-slate-400 font-semibold mb-1">Approved Loan Amount ($)</label>
-                  <input 
+                  <input
                     type="number"
                     value={modalApprovedAmt}
                     onChange={(e) => setModalApprovedAmt(e.target.value)}
@@ -490,7 +487,7 @@ function LoanOfficerDashboard() {
 
                 <div>
                   <label className="block text-slate-400 font-semibold mb-1">Interest Rate APR (%)</label>
-                  <input 
+                  <input
                     type="number"
                     step="0.25"
                     value={modalInterestRate}
@@ -514,11 +511,10 @@ function LoanOfficerDashboard() {
                       key={btn.id}
                       type="button"
                       onClick={() => setModalStatus(btn.id)}
-                      className={`py-2.5 rounded-xl font-bold text-xs transition border ${
-                        modalStatus === btn.id 
-                          ? `${btn.color} border-transparent shadow-lg` 
+                      className={`py-2.5 rounded-xl font-bold text-xs transition border ${modalStatus === btn.id
+                          ? `${btn.color} border-transparent shadow-lg`
                           : 'bg-[#182032] border-slate-800 text-slate-400 hover:border-slate-700'
-                      }`}
+                        }`}
                     >
                       {btn.label}
                     </button>
@@ -529,7 +525,7 @@ function LoanOfficerDashboard() {
               {/* Underwriting Notes Input */}
               <div>
                 <label className="block text-xs font-semibold text-slate-300 mb-1">Underwriter Remarks & Compliance Notes</label>
-                <textarea 
+                <textarea
                   rows="3"
                   value={modalNotes}
                   onChange={(e) => setModalNotes(e.target.value)}
@@ -542,14 +538,14 @@ function LoanOfficerDashboard() {
 
             {/* Modal Footer Actions */}
             <div className="p-4 border-t border-slate-800 bg-[#161f33] flex items-center justify-end gap-3">
-              <button 
+              <button
                 onClick={() => setSelectedApp(null)}
                 className="px-4 py-2 rounded-xl border border-slate-700 text-slate-300 text-xs font-semibold hover:bg-slate-800 transition"
               >
                 Cancel
               </button>
 
-              <button 
+              <button
                 onClick={handleUpdateStatus}
                 disabled={updating}
                 className="px-6 py-2 rounded-xl bg-[#26e6b6] text-slate-950 font-bold text-xs hover:bg-[#1fc49a] transition shadow-lg shadow-[#26e6b6]/20"

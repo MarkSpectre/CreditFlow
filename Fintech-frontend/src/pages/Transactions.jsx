@@ -2,21 +2,25 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
-import { 
-  ArrowLeftRight, 
-  Search, 
-  Filter, 
-  Download, 
-  ArrowUpRight, 
-  ArrowDownRight, 
-  Clock, 
-  CheckCircle2, 
+import {
+  ArrowLeftRight,
+  Search,
+  Filter,
+  Download,
+  ArrowUpRight,
+  ArrowDownRight,
+  Clock,
+  CheckCircle2,
   AlertTriangle,
   FileText,
   DollarSign,
   Calendar,
   CreditCard,
-  X
+  X,
+  Plus,
+  Sparkles,
+  TrendingUp,
+  AlertCircle
 } from 'lucide-react';
 
 function Transactions() {
@@ -117,7 +121,8 @@ function Transactions() {
         payment_method: "ACH Direct Deposit",
         reference: "RET-2026-Q3"
       }
-    ]
+    ],
+    score: { score: 750, status: "GOOD SCORE" }
   });
 
   const [loading, setLoading] = useState(true);
@@ -127,10 +132,25 @@ function Transactions() {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [activeModalTxn, setActiveModalTxn] = useState(null);
 
+  // Add Transaction Modal State
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [scoreAlert, setScoreAlert] = useState(null);
+  const [newTxn, setNewTxn] = useState({
+    amount: '',
+    type: 'credit',
+    merchant: '',
+    category: 'Client Revenue',
+    payment_method: 'ACH Direct Deposit',
+    reference: '',
+    date: new Date().toISOString().slice(0, 10),
+    status: 'Completed'
+  });
+
   // Retrieve user profile
   const storedUserRaw = localStorage.getItem('user_profile');
   const storedUser = storedUserRaw ? JSON.parse(storedUserRaw) : null;
-  const userObj = storedUser || { first_name: 'User', email: 'user@trustledger.com' };
+  const userObj = storedUser || { first_name: 'User', email: 'user@CreditFlow.com' };
 
   useEffect(() => {
     const fetchTransactions = async () => {
@@ -153,9 +173,9 @@ function Transactions() {
 
   // Filter Logic
   const filteredTransactions = data.transactions.filter(txn => {
-    const matchesSearch = 
+    const matchesSearch =
       txn.merchant.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      txn.reference.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (txn.reference && txn.reference.toLowerCase().includes(searchQuery.toLowerCase())) ||
       txn.id.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesType = selectedType === 'all' || txn.type === selectedType;
@@ -187,10 +207,109 @@ function Transactions() {
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
     link.setAttribute("href", encodedUri);
-    link.setAttribute("download", `TrustLedger_Transactions_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute("download", `CreditFlow_Transactions_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  // Add Transaction Form Submission
+  const handleAddTransaction = async (e) => {
+    e.preventDefault();
+    if (!newTxn.amount || !newTxn.merchant) return;
+
+    setSubmitting(true);
+    const oldScore = data.score?.score || 720;
+    const numAmt = parseFloat(newTxn.amount);
+
+    try {
+      const token = localStorage.getItem('token');
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const payload = {
+        ...newTxn,
+        amount: numAmt
+      };
+
+      const res = await axios.post('http://localhost:8000/api/analytics/transactions/', payload, { headers });
+
+      if (res.data && res.data.transactions) {
+        setData(res.data);
+        const newScore = res.data.score?.score || oldScore;
+        const statusStr = res.data.score?.status || 'UPDATED';
+
+        setScoreAlert({
+          oldScore,
+          newScore,
+          status: statusStr,
+          type: newTxn.type,
+          amount: numAmt
+        });
+
+        setTimeout(() => setScoreAlert(null), 8000);
+      }
+    } catch (err) {
+      console.warn("Adding transaction in offline fallback mode:", err);
+      const isCredit = newTxn.type === 'credit';
+      const createdTxn = {
+        id: `TXN-${Math.floor(882100 + Math.random() * 100000)}`,
+        date: newTxn.date,
+        merchant: newTxn.merchant,
+        category: newTxn.category,
+        type: newTxn.type,
+        amount: numAmt,
+        status: newTxn.status,
+        payment_method: newTxn.payment_method,
+        reference: newTxn.reference || `REF-${Math.floor(10000 + Math.random() * 90000)}`
+      };
+
+      const updatedTxns = [createdTxn, ...data.transactions];
+      const newInflow = data.summary.monthly_inflow + (isCredit ? numAmt : 0);
+      const newOutflow = data.summary.monthly_outflow + (!isCredit ? numAmt : 0);
+      const newNet = newInflow - newOutflow;
+
+      const scoreDelta = isCredit ? Math.min(25, Math.max(3, Math.floor(numAmt / 1000) * 3)) : -Math.min(15, Math.max(2, Math.floor(numAmt / 2000) * 2));
+      const newScoreVal = Math.min(850, Math.max(300, oldScore + scoreDelta));
+
+      setData(prev => ({
+        ...prev,
+        summary: {
+          ...prev.summary,
+          monthly_inflow: newInflow,
+          monthly_outflow: newOutflow,
+          net_cashflow: newNet,
+          account_balance: prev.summary.account_balance + (isCredit ? numAmt : -numAmt)
+        },
+        transactions: updatedTxns,
+        score: {
+          ...(prev.score || {}),
+          score: newScoreVal,
+          status: newScoreVal >= 780 ? "EXCELLENT SCORE" : (newScoreVal >= 680 ? "GOOD SCORE" : "MODERATE SCORE")
+        }
+      }));
+
+      setScoreAlert({
+        oldScore,
+        newScore: newScoreVal,
+        status: newScoreVal >= 780 ? "EXCELLENT SCORE" : "GOOD SCORE",
+        type: newTxn.type,
+        amount: numAmt
+      });
+
+      setTimeout(() => setScoreAlert(null), 8000);
+    } finally {
+      setSubmitting(false);
+      setIsAddModalOpen(false);
+      setNewTxn({
+        amount: '',
+        type: 'credit',
+        merchant: '',
+        category: 'Client Revenue',
+        payment_method: 'ACH Direct Deposit',
+        reference: '',
+        date: new Date().toISOString().slice(0, 10),
+        status: 'Completed'
+      });
+    }
   };
 
   return (
@@ -200,15 +319,15 @@ function Transactions() {
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        
+
         {/* Top Header */}
         <Header user={userObj} />
 
         {/* Dashboard Body Canvas */}
         <div className="p-6 md:p-10 flex-1 relative bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]">
           <div className="max-w-6xl mx-auto space-y-8">
-            
-            {/* Page Header */}
+
+            {/* Page Header & Action Buttons */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div>
                 <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight flex items-center gap-3">
@@ -217,17 +336,73 @@ function Transactions() {
                 <p className="text-xs text-slate-500 mt-1">Real-time ledger audit trail parsed from bank accounts & connected accounting streams.</p>
               </div>
 
-              <button
-                onClick={handleExportCSV}
-                className="px-4 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition shadow-lg flex items-center gap-2 self-start sm:self-auto"
-              >
-                <Download className="w-4 h-4 text-[#26e6b6]" /> Export Statement (CSV)
-              </button>
+              <div className="flex items-center gap-3 self-start sm:self-auto">
+                <button
+                  onClick={() => setIsAddModalOpen(true)}
+                  className="px-4 py-2.5 rounded-xl bg-[#26e6b6] text-slate-950 font-extrabold text-xs hover:bg-[#1fc49a] transition shadow-lg shadow-[#26e6b6]/20 flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" /> Add Transaction
+                </button>
+
+                <button
+                  onClick={handleExportCSV}
+                  className="px-4 py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs hover:bg-slate-800 transition shadow-lg flex items-center gap-2"
+                >
+                  <Download className="w-4 h-4 text-[#26e6b6]" /> Export Statement
+                </button>
+              </div>
             </div>
+
+            {/* Live Credit Score Impact Alert Banner */}
+            {scoreAlert && (
+              <div className="bg-slate-900 border-2 border-[#26e6b6] rounded-3xl p-5 shadow-2xl text-white animate-in slide-in-from-top duration-300 relative overflow-hidden">
+                <div className="absolute top-0 right-0 p-3 opacity-10">
+                  <Sparkles className="w-24 h-24 text-[#26e6b6]" />
+                </div>
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 z-10 relative">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-[#26e6b6]/20 rounded-2xl border border-[#26e6b6]/40">
+                      <Sparkles className="w-7 h-7 text-[#26e6b6]" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="bg-[#26e6b6] text-slate-950 font-black text-[10px] uppercase px-2 py-0.5 rounded-md">
+                          Live Score Updated
+                        </span>
+                        <span className="text-xs font-semibold text-slate-400">
+                          {scoreAlert.type === 'credit' ? 'Income Transaction Added' : 'Expense Recorded'}
+                        </span>
+                      </div>
+                      <h3 className="text-lg font-black text-white mt-1 flex items-center gap-2">
+                        Credit Score Changed:
+                        <span className="text-slate-400 line-through text-sm">{scoreAlert.oldScore}</span>
+                        <span className="text-[#26e6b6] text-xl font-extrabold flex items-center gap-1">
+                          {scoreAlert.newScore}
+                          {scoreAlert.newScore >= scoreAlert.oldScore ? (
+                            <TrendingUp className="w-5 h-5 text-emerald-400 inline" />
+                          ) : (
+                            <ArrowDownRight className="w-5 h-5 text-rose-400 inline" />
+                          )}
+                        </span>
+                        <span className="text-xs px-2 py-0.5 bg-emerald-500/20 text-emerald-300 rounded-md font-bold border border-emerald-500/30">
+                          {scoreAlert.status}
+                        </span>
+                      </h3>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setScoreAlert(null)}
+                    className="p-1.5 rounded-full bg-slate-800 text-slate-400 hover:text-white transition"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Summary Metrics Banner */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              
+
               {/* Account Balance */}
               <div className="bg-white/90 backdrop-blur-md rounded-2xl p-5 border border-slate-200/80 shadow-md">
                 <div className="flex justify-between items-center text-slate-500 text-xs font-semibold">
@@ -235,7 +410,7 @@ function Transactions() {
                   <DollarSign className="w-4 h-4 text-[#26e6b6]" />
                 </div>
                 <p className="text-2xl font-extrabold text-slate-900 mt-2">
-                  ${data.summary.account_balance.toLocaleString()}
+                  ${data.summary.account_balance.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </p>
                 <span className="text-[10px] text-emerald-600 font-bold mt-1 block">Live Bank Stream</span>
               </div>
@@ -247,9 +422,9 @@ function Transactions() {
                   <ArrowUpRight className="w-4 h-4 text-emerald-500" />
                 </div>
                 <p className="text-2xl font-extrabold text-emerald-600 mt-2">
-                  +${data.summary.monthly_inflow.toLocaleString()}
+                  +${data.summary.monthly_inflow.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </p>
-                <span className="text-[10px] text-slate-400 font-medium mt-1 block">2 Credit Deposits</span>
+                <span className="text-[10px] text-slate-400 font-medium mt-1 block">Real-time Revenue</span>
               </div>
 
               {/* Monthly Outflow */}
@@ -259,23 +434,26 @@ function Transactions() {
                   <ArrowDownRight className="w-4 h-4 text-rose-500" />
                 </div>
                 <p className="text-2xl font-extrabold text-rose-600 mt-2">
-                  -${data.summary.monthly_outflow.toLocaleString()}
+                  -${data.summary.monthly_outflow.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </p>
-                <span className="text-[10px] text-slate-400 font-medium mt-1 block">6 Operating Expenses</span>
+                <span className="text-[10px] text-slate-400 font-medium mt-1 block">Operating Expenses</span>
               </div>
 
-              {/* Net Cashflow */}
-              <div className="bg-white/90 backdrop-blur-md rounded-2xl p-5 border border-slate-200/80 shadow-md">
+              {/* Net Cashflow & Live Credit Score */}
+              <div className="bg-white/90 backdrop-blur-md rounded-2xl p-5 border border-slate-200/80 shadow-md relative overflow-hidden">
                 <div className="flex justify-between items-center text-slate-500 text-xs font-semibold">
-                  <span>Net Monthly Cashflow</span>
-                  <Clock className="w-4 h-4 text-amber-500" />
+                  <span>Net Cashflow & Score</span>
+                  <Sparkles className="w-4 h-4 text-[#26e6b6]" />
                 </div>
                 <p className={`text-2xl font-extrabold mt-2 ${data.summary.net_cashflow >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                  {data.summary.net_cashflow >= 0 ? '+' : ''}${data.summary.net_cashflow.toLocaleString()}
+                  {data.summary.net_cashflow >= 0 ? '+' : ''}${data.summary.net_cashflow.toLocaleString('en-US', { minimumFractionDigits: 2 })}
                 </p>
-                <span className="text-[10px] text-slate-400 font-medium mt-1 block">
-                  {data.summary.pending_count} Pending Authorization
-                </span>
+                <div className="mt-1 flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500 font-medium">Credit Score:</span>
+                  <span className="font-extrabold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                    {data.score?.score || 750} ({data.score?.status || 'GOOD SCORE'})
+                  </span>
+                </div>
               </div>
 
             </div>
@@ -283,7 +461,7 @@ function Transactions() {
             {/* Filter & Search Bar */}
             <div className="bg-white/90 backdrop-blur-md rounded-3xl p-6 border border-slate-200/80 shadow-xl space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
-                
+
                 {/* Search Box (5 cols) */}
                 <div className="md:col-span-5 relative">
                   <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
@@ -331,11 +509,10 @@ function Transactions() {
                     <button
                       key={type}
                       onClick={() => setSelectedType(type)}
-                      className={`flex-1 py-1 text-[11px] font-bold rounded-lg transition capitalize ${
-                        selectedType === type
+                      className={`flex-1 py-1 text-[11px] font-bold rounded-lg transition capitalize ${selectedType === type
                           ? 'bg-[#26e6b6] text-slate-950 shadow-sm'
                           : 'text-slate-500 hover:text-slate-800'
-                      }`}
+                        }`}
                     >
                       {type}
                     </button>
@@ -371,8 +548,8 @@ function Transactions() {
                     </thead>
                     <tbody className="divide-y divide-slate-100 text-slate-800 font-semibold">
                       {filteredTransactions.map((txn) => (
-                        <tr 
-                          key={txn.id} 
+                        <tr
+                          key={txn.id}
                           onClick={() => setActiveModalTxn(txn)}
                           className="hover:bg-slate-50/90 transition cursor-pointer group"
                         >
@@ -393,13 +570,12 @@ function Transactions() {
                             {txn.payment_method}
                           </td>
                           <td className="p-3.5">
-                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 w-max ${
-                              txn.status === 'Completed'
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold flex items-center gap-1 w-max ${txn.status === 'Completed'
                                 ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                                 : txn.status === 'Pending'
-                                ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                                : 'bg-rose-100 text-rose-800 border border-rose-300'
-                            }`}>
+                                  ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                                  : 'bg-rose-100 text-rose-800 border border-rose-300'
+                              }`}>
                               {txn.status === 'Completed' && <CheckCircle2 className="w-3 h-3 text-emerald-600" />}
                               {txn.status === 'Pending' && <Clock className="w-3 h-3 text-amber-600" />}
                               {txn.status === 'Flagged' && <AlertTriangle className="w-3 h-3 text-rose-600" />}
@@ -424,6 +600,174 @@ function Transactions() {
 
       </div>
 
+      {/* Add Transaction Modal */}
+      {isAddModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white border border-slate-200 rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-6">
+
+            <div className="flex items-center justify-between border-b border-slate-100 pb-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-[#26e6b6]/20 rounded-xl text-slate-900 border border-[#26e6b6]/40">
+                  <Plus className="w-5 h-5 text-slate-900" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-extrabold text-slate-900">Record New Transaction</h3>
+                  <p className="text-xs text-slate-500">Updating transactions will automatically recalculate your business credit score.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsAddModalOpen(false)}
+                className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleAddTransaction} className="space-y-4">
+
+              {/* Type Switcher Pills */}
+              <div className="space-y-1">
+                <label className="block text-xs font-semibold text-slate-700">Transaction Type</label>
+                <div className="grid grid-cols-2 gap-2 bg-slate-100 p-1 rounded-xl border border-slate-200">
+                  <button
+                    type="button"
+                    onClick={() => setNewTxn(prev => ({ ...prev, type: 'credit', category: 'Client Revenue' }))}
+                    className={`py-2 rounded-lg text-xs font-extrabold flex items-center justify-center gap-2 transition ${newTxn.type === 'credit'
+                        ? 'bg-emerald-500 text-white shadow-md'
+                        : 'text-slate-600 hover:bg-slate-200'
+                      }`}
+                  >
+                    <ArrowUpRight className="w-4 h-4" /> Credit / Income (+)
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setNewTxn(prev => ({ ...prev, type: 'debit', category: 'Operations' }))}
+                    className={`py-2 rounded-lg text-xs font-extrabold flex items-center justify-center gap-2 transition ${newTxn.type === 'debit'
+                        ? 'bg-rose-500 text-white shadow-md'
+                        : 'text-slate-600 hover:bg-slate-200'
+                      }`}
+                  >
+                    <ArrowDownRight className="w-4 h-4" /> Debit / Expense (-)
+                  </button>
+                </div>
+              </div>
+
+              {/* Amount & Merchant Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-slate-700">Amount ($ USD)</label>
+                  <div className="relative">
+                    <DollarSign className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0.01"
+                      required
+                      value={newTxn.amount}
+                      onChange={(e) => setNewTxn(prev => ({ ...prev, amount: e.target.value }))}
+                      placeholder="e.g. 5000.00"
+                      className="w-full pl-9 pr-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:border-[#26e6b6]"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-slate-700">Merchant / Counterparty</label>
+                  <input
+                    type="text"
+                    required
+                    value={newTxn.merchant}
+                    onChange={(e) => setNewTxn(prev => ({ ...prev, merchant: e.target.value }))}
+                    placeholder="e.g. Acme Corp Invoicing"
+                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-[#26e6b6]"
+                  />
+                </div>
+              </div>
+
+              {/* Category & Payment Method Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-slate-700">Category</label>
+                  <select
+                    value={newTxn.category}
+                    onChange={(e) => setNewTxn(prev => ({ ...prev, category: e.target.value }))}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-[#26e6b6]"
+                  >
+                    <option value="Client Revenue">Client Revenue</option>
+                    <option value="Infrastructure">Infrastructure</option>
+                    <option value="Software">Software</option>
+                    <option value="Operations">Operations</option>
+                    <option value="Marketing">Marketing</option>
+                    <option value="Inventory">Inventory</option>
+                    <option value="Professional Services">Professional Services</option>
+                  </select>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-slate-700">Payment Channel</label>
+                  <select
+                    value={newTxn.payment_method}
+                    onChange={(e) => setNewTxn(prev => ({ ...prev, payment_method: e.target.value }))}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-[#26e6b6]"
+                  >
+                    <option value="ACH Direct Deposit">ACH Direct Deposit</option>
+                    <option value="Wire Transfer">Wire Transfer</option>
+                    <option value="Corporate Credit Card (•••• 4092)">Corporate Credit Card (•••• 4092)</option>
+                    <option value="Auto-Debit Checking">Auto-Debit Checking</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Date & Reference */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-slate-700">Transaction Date</label>
+                  <input
+                    type="date"
+                    required
+                    value={newTxn.date}
+                    onChange={(e) => setNewTxn(prev => ({ ...prev, date: e.target.value }))}
+                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-[#26e6b6]"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-xs font-semibold text-slate-700">Reference ID (Optional)</label>
+                  <input
+                    type="text"
+                    value={newTxn.reference}
+                    onChange={(e) => setNewTxn(prev => ({ ...prev, reference: e.target.value }))}
+                    placeholder="e.g. INV-99042"
+                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:border-[#26e6b6]"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="flex-1 py-3 rounded-xl border border-slate-300 text-slate-700 text-xs font-bold hover:bg-slate-100 transition"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="flex-1 py-3 rounded-xl bg-[#26e6b6] text-slate-950 text-xs font-extrabold hover:bg-[#1fc49a] transition shadow-lg shadow-[#26e6b6]/20 flex items-center justify-center gap-2"
+                >
+                  {submitting ? 'Updating Score...' : 'Post Transaction & Update Score'}
+                </button>
+              </div>
+
+            </form>
+
+          </div>
+        </div>
+      )}
+
       {/* Transaction Details Modal */}
       {activeModalTxn && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
@@ -433,7 +777,7 @@ function Transactions() {
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Transaction Audit Breakdown</span>
                 <h3 className="text-lg font-bold text-slate-900">{activeModalTxn.id}</h3>
               </div>
-              <button 
+              <button
                 onClick={() => setActiveModalTxn(null)}
                 className="p-1 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
               >
@@ -482,7 +826,7 @@ function Transactions() {
               >
                 <FileText className="w-4 h-4 text-emerald-600" /> View GST Invoice
               </button>
-              
+
               <button
                 onClick={() => setActiveModalTxn(null)}
                 className="flex-1 py-2.5 rounded-xl bg-[#26e6b6] text-slate-950 text-xs font-extrabold hover:bg-[#1fc49a] transition shadow-md"

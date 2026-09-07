@@ -12,7 +12,7 @@ function Header({ user }) {
   // Retrieve stored user profile if prop is null/undefined
   const storedUserRaw = localStorage.getItem('user_profile');
   const storedUser = storedUserRaw ? JSON.parse(storedUserRaw) : null;
-  const currentUser = user || storedUser || { first_name: 'User', email: 'user@trustledger.com' };
+  const currentUser = user || storedUser || { first_name: 'User', email: 'user@CreditFlow.com' };
 
   const userName = currentUser.first_name || 'User';
   const userPic = currentUser.picture;
@@ -36,16 +36,16 @@ function Header({ user }) {
   return (
     <>
       <header className="bg-[#0b101d] text-slate-300 px-6 lg:px-8 py-3.5 flex items-center justify-between border-b border-slate-800/80 select-none shadow-lg sticky top-0 z-40 backdrop-blur-md bg-opacity-95">
-        
+
         {/* Left: Brand Logo + Nav Links */}
         <div className="flex items-center gap-8">
-          <div 
-            className="flex items-center gap-2.5 cursor-pointer group" 
+          <div
+            className="flex items-center gap-2.5 cursor-pointer group"
             onClick={() => navigate('/dashboard')}
           >
-            <img src={logo} alt="TrustLedger Logo" className="h-7 w-auto object-contain transition-transform group-hover:scale-105" />
+            <img src={logo} alt="CreditFlow Logo" className="h-7 w-auto object-contain transition-transform group-hover:scale-105" />
             <span className="font-extrabold text-white text-base tracking-tight">
-              TrustLedger <span className="text-[#26e6b6]">Dashboard</span>
+              CreditFlow <span className="text-[#26e6b6]">Dashboard</span>
             </span>
           </div>
 
@@ -56,11 +56,10 @@ function Header({ user }) {
                 <button
                   key={link.name}
                   onClick={() => navigate(link.path)}
-                  className={`py-1 transition duration-200 ${
-                    isActive 
-                      ? 'text-[#26e6b6] border-b-2 border-[#26e6b6] font-bold' 
+                  className={`py-1 transition duration-200 ${isActive
+                      ? 'text-[#26e6b6] border-b-2 border-[#26e6b6] font-bold'
                       : 'text-slate-400 hover:text-white'
-                  }`}
+                    }`}
                 >
                   {link.name}
                 </button>
@@ -71,18 +70,18 @@ function Header({ user }) {
 
         {/* Right: User Profile & Improved Logout Button */}
         <div className="flex items-center gap-4">
-          
+
           {/* User Avatar & Details */}
-          <div 
+          <div
             onClick={() => navigate('/dashboard/settings')}
             className="flex items-center gap-2.5 cursor-pointer hover:opacity-90 transition group"
           >
             {userPic && !imgError ? (
-              <img 
-                src={userPic} 
-                alt={userName} 
+              <img
+                src={userPic}
+                alt={userName}
                 onError={() => setImgError(true)}
-                className="w-8 h-8 rounded-full border border-[#26e6b6] object-cover shadow-sm group-hover:ring-2 group-hover:ring-[#26e6b6]/40 transition" 
+                className="w-8 h-8 rounded-full border border-[#26e6b6] object-cover shadow-sm group-hover:ring-2 group-hover:ring-[#26e6b6]/40 transition"
               />
             ) : (
               <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#26e6b6] to-teal-600 text-slate-950 font-extrabold text-xs flex items-center justify-center shadow-md border border-[#26e6b6]/40">
@@ -97,7 +96,7 @@ function Header({ user }) {
           </div>
 
           {/* Upgraded Logout Button */}
-          <button 
+          <button
             onClick={() => setShowLogoutModal(true)}
             className="px-3.5 py-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 hover:bg-rose-500 hover:text-white hover:border-rose-500 text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 shadow-sm active:scale-95"
             title="Logout from session"
@@ -115,10 +114,10 @@ function Header({ user }) {
             <div className="w-12 h-12 rounded-2xl bg-rose-500/15 border border-rose-500/30 text-rose-400 flex items-center justify-center mx-auto">
               <AlertCircle className="w-6 h-6" />
             </div>
-            
+
             <div>
               <h3 className="text-lg font-bold text-white">Log Out Confirmation</h3>
-              <p className="text-xs text-slate-400 mt-1">Are you sure you want to log out of your TrustLedger session?</p>
+              <p className="text-xs text-slate-400 mt-1">Are you sure you want to log out of your CreditFlow session?</p>
             </div>
 
             <div className="flex gap-3 pt-2">
@@ -129,7 +128,7 @@ function Header({ user }) {
               >
                 Cancel
               </button>
-              
+
               <button
                 type="button"
                 onClick={handleConfirmLogout}

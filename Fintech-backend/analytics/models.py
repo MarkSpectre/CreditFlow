@@ -56,5 +56,30 @@ class LoanApplication(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
 
+
+
+class Transaction(models.Model):
+    TRANSACTION_TYPES = [
+        ('credit', 'Credit / Income'),
+        ('debit', 'Debit / Expense'),
+    ]
+    STATUS_CHOICES = [
+        ('Completed', 'Completed'),
+        ('Pending', 'Pending'),
+        ('Flagged', 'Flagged'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='transactions')
+    txn_id = models.CharField(max_length=50, unique=True)
+    date = models.CharField(max_length=50)
+    merchant = models.CharField(max_length=255)
+    category = models.CharField(max_length=100)
+    type = models.CharField(max_length=20, choices=TRANSACTION_TYPES)
+    amount = models.FloatField()
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='Completed')
+    payment_method = models.CharField(max_length=100, default='ACH Direct Deposit')
+    reference = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
     def __str__(self):
-        return f"Loan ${self.requested_amount:,.0f} - {self.user.email} ({self.status})"
+        return f"{self.txn_id} - {self.merchant} (${self.amount})"

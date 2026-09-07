@@ -3,14 +3,14 @@ import axios from 'axios';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
 import logo from '../assets/logo.png';
-import { 
-  Landmark, 
-  Calculator, 
-  CheckCircle, 
-  AlertTriangle, 
-  Clock, 
-  DollarSign, 
-  ArrowRight, 
+import {
+  Landmark,
+  Calculator,
+  CheckCircle,
+  AlertTriangle,
+  Clock,
+  DollarSign,
+  ArrowRight,
   ShieldCheck,
   LogOut,
   Sparkles
@@ -44,7 +44,7 @@ function Loan() {
   const tenure = parseInt(formData.tenureMonths) || 12;
   const estimatedRate = 9.5; // 9.5% annual rate preview
   const monthlyRate = (estimatedRate / 100) / 12;
-  
+
   const estimatedEmi = amount > 0 && tenure > 0 && monthlyRate > 0
     ? (amount * monthlyRate * Math.pow(1 + monthlyRate, tenure)) / (Math.pow(1 + monthlyRate, tenure) - 1)
     : 0;
@@ -85,7 +85,7 @@ function Loan() {
     try {
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
+
       const payload = {
         requested_amount: parseFloat(formData.requestedAmount),
         loan_purpose: formData.loanPurpose,
@@ -128,7 +128,7 @@ function Loan() {
     navigate('/login');
   };
 
-  const userObj = storedUser || { first_name: 'User', email: 'user@trustledger.com' };
+  const userObj = storedUser || { first_name: 'User', email: 'user@CreditFlow.com' };
   const userName = userObj.first_name || 'User';
   const userPic = userObj.picture;
 
@@ -139,7 +139,7 @@ function Loan() {
 
       {/* Main Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        
+
         {/* Top Navigation Header */}
         <Header user={userObj} />
 
@@ -166,7 +166,7 @@ function Loan() {
 
             {/* Grid Layout: Left Application Form (7 cols) | Right Realtime Calculator & Decision (5 cols) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              
+
               {/* LEFT: Application Form */}
               <div className="lg:col-span-7 bg-white/90 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-slate-200/80 shadow-xl space-y-6">
                 <div className="border-b border-slate-200 pb-4 flex items-center gap-3">
@@ -180,24 +180,24 @@ function Loan() {
                 </div>
 
                 <form onSubmit={handleSubmitApplication} className="space-y-5">
-                  
+
                   {/* Loan Amount Input & Slider */}
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <label className="text-xs font-bold text-slate-700">Requested Loan Amount ($)</label>
                       <span className="text-base font-extrabold text-[#10b981]">${parseFloat(formData.requestedAmount).toLocaleString()}</span>
                     </div>
-                    <input 
-                      type="range" 
+                    <input
+                      type="range"
                       name="requestedAmount"
-                      min="5000" 
-                      max="500000" 
+                      min="5000"
+                      max="500000"
                       step="5000"
                       value={formData.requestedAmount}
                       onChange={handleInputChange}
                       className="w-full accent-[#26e6b6] cursor-pointer mb-2"
                     />
-                    <input 
+                    <input
                       type="number"
                       name="requestedAmount"
                       value={formData.requestedAmount}
@@ -210,7 +210,7 @@ function Loan() {
                     {/* Purpose Selector */}
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Loan Purpose</label>
-                      <select 
+                      <select
                         name="loanPurpose"
                         value={formData.loanPurpose}
                         onChange={handleInputChange}
@@ -227,7 +227,7 @@ function Loan() {
                     {/* Tenure Selector */}
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Tenure (Months)</label>
-                      <select 
+                      <select
                         name="tenureMonths"
                         value={formData.tenureMonths}
                         onChange={handleInputChange}
@@ -247,8 +247,8 @@ function Loan() {
                     {/* Monthly Income */}
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Monthly Business Revenue ($)</label>
-                      <input 
-                        type="number" 
+                      <input
+                        type="number"
                         name="monthlyIncome"
                         value={formData.monthlyIncome}
                         onChange={handleInputChange}
@@ -259,8 +259,8 @@ function Loan() {
                     {/* Existing EMI */}
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Existing Monthly Obligations ($)</label>
-                      <input 
-                        type="number" 
+                      <input
+                        type="number"
                         name="existingEmi"
                         value={formData.existingEmi}
                         onChange={handleInputChange}
@@ -272,7 +272,7 @@ function Loan() {
                   {/* Collateral Details */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">Collateral Type</label>
-                    <select 
+                    <select
                       name="collateralType"
                       value={formData.collateralType}
                       onChange={handleInputChange}
@@ -285,8 +285,8 @@ function Loan() {
                     </select>
                   </div>
 
-                  <button 
-                    type="submit" 
+                  <button
+                    type="submit"
                     disabled={loading}
                     className="w-full py-4 rounded-2xl bg-[#26e6b6] text-slate-950 font-extrabold text-sm hover:bg-[#1fc49a] transition shadow-xl shadow-[#26e6b6]/25 flex items-center justify-center gap-2"
                   >
@@ -302,7 +302,7 @@ function Loan() {
 
               {/* RIGHT: Live EMI Calculator & Decision Box */}
               <div className="lg:col-span-5 space-y-6">
-                
+
                 {/* Real-time EMI Preview Widget */}
                 <div className="bg-[#0e1424] text-white rounded-3xl p-6 border border-slate-800 shadow-2xl relative overflow-hidden space-y-5">
                   <div className="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -341,22 +341,20 @@ function Loan() {
 
                 {/* Instant Underwriting Result Card (when submitted) */}
                 {underwritingResult && (
-                  <div className={`rounded-3xl p-6 border shadow-2xl space-y-4 animate-in fade-in zoom-in-95 ${
-                    underwritingResult.status === 'APPROVED' 
-                      ? 'bg-emerald-950/80 border-emerald-500/50 text-white' 
+                  <div className={`rounded-3xl p-6 border shadow-2xl space-y-4 animate-in fade-in zoom-in-95 ${underwritingResult.status === 'APPROVED'
+                      ? 'bg-emerald-950/80 border-emerald-500/50 text-white'
                       : underwritingResult.status === 'PRE_APPROVED'
-                      ? 'bg-amber-950/80 border-amber-500/50 text-white'
-                      : 'bg-slate-900 border-slate-700 text-white'
-                  }`}>
+                        ? 'bg-amber-950/80 border-amber-500/50 text-white'
+                        : 'bg-slate-900 border-slate-700 text-white'
+                    }`}>
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold tracking-wider uppercase flex items-center gap-2">
                         <Sparkles className="w-4 h-4 text-[#26e6b6]" /> Automated Underwriting Result
                       </span>
-                      <span className={`px-3 py-1 rounded-full text-xs font-extrabold ${
-                        underwritingResult.status === 'APPROVED' 
-                          ? 'bg-emerald-500 text-slate-950' 
+                      <span className={`px-3 py-1 rounded-full text-xs font-extrabold ${underwritingResult.status === 'APPROVED'
+                          ? 'bg-emerald-500 text-slate-950'
                           : 'bg-amber-400 text-slate-950'
-                      }`}>
+                        }`}>
                         {underwritingResult.status}
                       </span>
                     </div>
@@ -428,13 +426,12 @@ function Loan() {
                           <td className="p-3.5">{item.interest_rate}%</td>
                           <td className="p-3.5">${item.monthly_installment.toLocaleString()}</td>
                           <td className="p-3.5">
-                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                              item.status === 'APPROVED' 
-                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                            <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold ${item.status === 'APPROVED'
+                                ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                                 : item.status === 'PRE_APPROVED'
-                                ? 'bg-amber-100 text-amber-800 border border-amber-300'
-                                : 'bg-slate-100 text-slate-700'
-                            }`}>
+                                  ? 'bg-amber-100 text-amber-800 border border-amber-300'
+                                  : 'bg-slate-100 text-slate-700'
+                              }`}>
                               {item.status}
                             </span>
                           </td>

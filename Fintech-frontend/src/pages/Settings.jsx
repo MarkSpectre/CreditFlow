@@ -2,15 +2,15 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Sidebar from '../components/Sidebar';
 import Header from '../components/Header';
-import { 
-  Settings as SettingsIcon, 
-  User, 
-  Building2, 
-  Bell, 
-  ShieldCheck, 
-  Key, 
-  CheckCircle, 
-  Save, 
+import {
+  Settings as SettingsIcon,
+  User,
+  Building2,
+  Bell,
+  ShieldCheck,
+  Key,
+  CheckCircle,
+  Save,
   Sparkles,
   Camera,
   AlertTriangle
@@ -34,7 +34,7 @@ function Settings() {
   });
 
   const [companyState, setCompanyState] = useState({
-    company_name: 'TrustLedger Tech Enterprises',
+    company_name: 'CreditFlow Tech Enterprises',
     tax_id: '27AAACF1234H1Z5',
     industry: 'SaaS & Tech Services',
     annual_revenue: 320000,
@@ -98,9 +98,9 @@ function Settings() {
 
       const token = localStorage.getItem('token');
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
+
       const res = await axios.post('http://localhost:8000/api/analytics/settings/', payload, { headers });
-      
+
       const updatedUser = res.data?.user || userState;
       localStorage.setItem('user_profile', JSON.stringify(updatedUser));
       setUserState(updatedUser);
@@ -133,14 +133,14 @@ function Settings() {
 
       {/* Main Container */}
       <div className="flex-1 flex flex-col min-w-0 overflow-y-auto">
-        
+
         {/* Top Header */}
         <Header user={userState} />
 
         {/* Dashboard Body Canvas */}
         <div className="p-6 md:p-10 flex-1 relative bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]">
           <div className="max-w-4xl mx-auto space-y-8">
-            
+
             {/* Title Header */}
             <div className="flex items-center justify-between">
               <div>
@@ -182,11 +182,10 @@ function Settings() {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition ${
-                      isActive
+                    className={`flex-1 py-3 px-4 rounded-xl text-xs font-bold flex items-center justify-center gap-2 transition ${isActive
                         ? 'bg-slate-900 text-white shadow-md'
                         : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                    }`}
+                      }`}
                   >
                     <Icon className={`w-4 h-4 ${isActive ? 'text-[#26e6b6]' : 'text-slate-400'}`} />
                     <span className="hidden sm:inline">{tab.label}</span>
@@ -197,7 +196,7 @@ function Settings() {
 
             {/* Main Form Box */}
             <form onSubmit={handleSaveSettings} className="bg-white/90 backdrop-blur-md rounded-3xl p-6 md:p-8 border border-slate-200/80 shadow-xl space-y-6">
-              
+
               {/* TAB 1: PROFILE & AVATAR */}
               {activeTab === 'profile' && (
                 <div className="space-y-6">
@@ -210,9 +209,9 @@ function Settings() {
                   <div className="flex flex-col sm:flex-row items-center gap-6 p-4 rounded-2xl bg-slate-50 border border-slate-200">
                     <div className="relative group">
                       {userState.picture && !avatarError ? (
-                        <img 
-                          src={userState.picture} 
-                          alt="Avatar Preview" 
+                        <img
+                          src={userState.picture}
+                          alt="Avatar Preview"
                           onError={() => setAvatarError(true)}
                           className="w-24 h-24 rounded-full object-cover border-4 border-[#26e6b6] shadow-xl"
                         />
@@ -229,7 +228,7 @@ function Settings() {
                     <div className="space-y-2 flex-1 text-center sm:text-left">
                       <h3 className="text-base font-bold text-slate-900">{userState.first_name} {userState.last_name}</h3>
                       <p className="text-xs text-slate-500">{userState.email}</p>
-                      
+
                       <div className="pt-2">
                         <span className="text-[11px] font-bold text-slate-600 block mb-2">Select Preset Avatar:</span>
                         <div className="flex items-center gap-2 justify-center sm:justify-start">
@@ -242,9 +241,8 @@ function Settings() {
                                 setUserState(prev => ({ ...prev, picture: url }));
                                 setAvatarError(false);
                               }}
-                              className={`w-9 h-9 rounded-full object-cover cursor-pointer border-2 transition ${
-                                userState.picture === url ? 'border-[#26e6b6] ring-2 ring-[#26e6b6]/40 scale-110' : 'border-slate-300 hover:border-slate-500'
-                              }`}
+                              className={`w-9 h-9 rounded-full object-cover cursor-pointer border-2 transition ${userState.picture === url ? 'border-[#26e6b6] ring-2 ring-[#26e6b6]/40 scale-110' : 'border-slate-300 hover:border-slate-500'
+                                }`}
                             />
                           ))}
                         </div>
@@ -256,8 +254,8 @@ function Settings() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">First Name *</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         name="first_name"
                         value={userState.first_name}
                         onChange={handleUserChange}
@@ -268,8 +266,8 @@ function Settings() {
 
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Last Name</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         name="last_name"
                         value={userState.last_name}
                         onChange={handleUserChange}
@@ -279,8 +277,8 @@ function Settings() {
 
                     <div className="md:col-span-2">
                       <label className="block text-xs font-bold text-slate-700 mb-1">Email Address *</label>
-                      <input 
-                        type="email" 
+                      <input
+                        type="email"
                         name="email"
                         value={userState.email}
                         onChange={handleUserChange}
@@ -291,8 +289,8 @@ function Settings() {
 
                     <div className="md:col-span-2">
                       <label className="block text-xs font-bold text-slate-700 mb-1">Custom Profile Picture Image URL</label>
-                      <input 
-                        type="url" 
+                      <input
+                        type="url"
                         name="picture"
                         value={userState.picture || ''}
                         onChange={handleUserChange}
@@ -316,8 +314,8 @@ function Settings() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Company Legal Name</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         name="company_name"
                         value={companyState.company_name}
                         onChange={handleCompanyChange}
@@ -327,8 +325,8 @@ function Settings() {
 
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Tax Identification (GSTIN/PAN)</label>
-                      <input 
-                        type="text" 
+                      <input
+                        type="text"
                         name="tax_id"
                         value={companyState.tax_id}
                         onChange={handleCompanyChange}
@@ -338,8 +336,8 @@ function Settings() {
 
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Annual Revenue ($)</label>
-                      <input 
-                        type="number" 
+                      <input
+                        type="number"
                         name="annual_revenue"
                         value={companyState.annual_revenue}
                         onChange={handleCompanyChange}
@@ -349,8 +347,8 @@ function Settings() {
 
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">Monthly Cash Flow ($)</label>
-                      <input 
-                        type="number" 
+                      <input
+                        type="number"
                         name="monthly_cashflow"
                         value={companyState.monthly_cashflow}
                         onChange={handleCompanyChange}
@@ -375,7 +373,7 @@ function Settings() {
                         <span className="text-xs font-bold text-slate-900 block">Email Shortage Alerts</span>
                         <span className="text-[10px] text-slate-500">Receive instant email when 90-day cash flow drops below threshold.</span>
                       </div>
-                      <input 
+                      <input
                         type="checkbox"
                         checked={preferencesState.email_notifications}
                         onChange={(e) => setPreferencesState(prev => ({ ...prev, email_notifications: e.target.checked }))}
@@ -388,7 +386,7 @@ function Settings() {
                         <span>Cash Shortage Trigger Threshold ($)</span>
                         <span className="text-[#10b981]">${preferencesState.cashflow_alert_threshold.toLocaleString()}</span>
                       </div>
-                      <input 
+                      <input
                         type="range"
                         min="1000"
                         max="25000"
@@ -416,7 +414,7 @@ function Settings() {
                         <span className="text-xs font-bold text-slate-900 block">Two-Factor Authentication (2FA)</span>
                         <span className="text-[10px] text-slate-500">Enforce OTP verification upon each login attempt.</span>
                       </div>
-                      <input 
+                      <input
                         type="checkbox"
                         checked={preferencesState.two_factor_auth}
                         onChange={(e) => setPreferencesState(prev => ({ ...prev, two_factor_auth: e.target.checked }))}
@@ -429,8 +427,8 @@ function Settings() {
                         <span className="text-xs font-bold uppercase tracking-wider text-[#26e6b6] flex items-center gap-1.5">
                           <Key className="w-4 h-4" /> Live API Secret Key
                         </span>
-                        <button 
-                          type="button" 
+                        <button
+                          type="button"
                           onClick={() => alert("New API Key generated successfully!")}
                           className="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-[11px] font-bold rounded-lg border border-slate-700 text-slate-200 transition"
                         >
